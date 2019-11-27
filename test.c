@@ -48,8 +48,13 @@ int main(void) {
 				scanf(" %c %c", &x, &y); // 플레이어가 원하는 좌표를 입력받는다.
 			}
 		}
+		
 		system("clear");
 		print_board();		// 돌 놓은곳을 반영하여 출력해준다.
+
+		is_end = check_pentago();
+		if(is_end != 0) continue;
+
 
 		printf("┌───┬───┐\n");
 		printf("│ 1 │ 2 │\n");
@@ -73,12 +78,16 @@ int main(void) {
 		rotate_board(quadrant - '0' - 1, c); // 판을 회전한다., c가 y나 Y이면 시계방향 , 아니면 반시계방향
 		system("clear");
 		print_board();		// 회전을 반영하여  반영하여 출력해준다.
+		is_end = check_pentago();
+		if(is_end != 0) continue;
+
 		printf("\n 플레이어 체인지!\n");
 		sleep(1);
 
-		 is_end = check_pentago();
 		count ++;
 	}
+	if(is_end == 1) printf("흑돌 승\n");
+	else  printf("백돌 승\n");
 	return 0;
 }
 // 보드(판)을 ' '로 초기화 해주는 함수
