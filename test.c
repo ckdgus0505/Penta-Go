@@ -29,26 +29,46 @@ int main(void) {
 		print_board();	// 현재 보드의 상태를 출력해준다.
 
 		printf("좌표 (ex, A1) : ");
-		scanf(" %c %c", &x, &y); // 플레이어가 원하는 좌표를 입력받는다.
+		while(1) {
+
+			scanf(" %c %c", &x, &y); // 플레이어가 원하는 좌표를 입력받는다.
+			if (( (x >= 'A' && x <= 'F') || (x >= 'a' && x <= 'f')) && y >= '1' && y <= '6') break;
+				printf("잘못 입력하셨습니다. 다시 입력하세요 :");
+
+		}
+		if (x >= 'a' && x <= 'f') x -= 32; // 'a' - 'A' = 32 소문자를 대문자로
 		if (count % 2 == 0) {
 			while (fix_board(x-'A', y-'0' - 1, 'O')!=0) {
-				printf("잘못두셨습니다. 다시 두세요 :");
+				printf("이미 두신곳에 두셨습니다. 다시 두세요 :");
 				scanf(" %c %c", &x, &y); // 플레이어가 원하는 좌표를 입력받는다.
 			}
 		} else {
 			while (fix_board(x-'A', y-'0' - 1, 'X')!=0) {
-				printf("잘못두셨습니다. 다시 두세요 :");
+				printf("이미 두신곳에 두셨습니다. 다시 두세요 :");
 				scanf(" %c %c", &x, &y); // 플레이어가 원하는 좌표를 입력받는다.
 			}
 		}
 		system("clear");
 		print_board();		// 돌 놓은곳을 반영하여 출력해준다.
 
+		printf("┌───┬───┐\n");
+		printf("│ 1 │ 2 │\n");
+		printf("├───┼───┤\n");
+		printf("│ 3 │ 4 │\n");
+		printf("└───┴───┘\n");
 
 		printf("회전할 사분면\n");
-		scanf(" %c", &quadrant);
-		printf("시계방향?\n");
-		scanf(" %c", &c);
+		while (1) {
+			scanf(" %c", &quadrant);
+			if (quadrant - '0' >= 1 && quadrant - '0' <= 4) break;
+				printf("잘못 입력하셨습니다. 다시 입력하세요 :");
+		}
+		printf("시계방향?(y/n)\n");
+		while (1) {
+			scanf(" %c", &c);
+			if (c == 'y' || c == 'Y' || c == 'n' || c == 'N') break;
+				printf("잘못 입력하셨습니다. 다시 입력하세요 :");
+		}
 
 		rotate_board(quadrant - '0' - 1, c); // 판을 회전한다., c가 y나 Y이면 시계방향 , 아니면 반시계방향
 		system("clear");
@@ -75,7 +95,7 @@ void init_board() {
 
 void print_board() {
 	printf(" │ A │ B │ C │ D │ E │ F │\n");
-	printf("─┼───┼───┼───┼───┼───┼───┼──\n");
+	printf("─┼───┼───┼───┼───┼───┼───┼\n");
 	int i=0, j=0, k=0;
 	for(int l = 0; l < 6; l++) {
 		printf("%d│", l+1);
@@ -94,7 +114,7 @@ void print_board() {
 			printf(" %c │", arr[i][j][k]);
 			
 		}
-		printf("\n─┼───┼───┼───┼───┼───┼───┼──\n");
+		printf("\n─┼───┼───┼───┼───┼───┼───┼\n");
 	}
 }
 
