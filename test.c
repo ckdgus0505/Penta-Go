@@ -9,7 +9,7 @@ char x, y, c;				// x,y는 보드의 좌표축, c는 회전시킬 사분면의 �
 										// c 는 clock wise 의 줄임말로, y or Y 가 입력되면 시계방향 회전
 void init_board();	// 보드를 깨끗한 상태로 초기화 하는 함수
 void print_board(); // 현재 보드의 상태를 출력해주는 함수
-void fix_board(int row, int col, char dol); // 현재 보드의 원하는 위치에 돌을 놓는 함수
+int fix_board(int row, int col, char dol); // 현재 보드의 원하는 위치에 돌을 놓는 함수
 void rotate_board(int quad, char is_clock_wise); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
 int check_pentago(); // 게임이 끝났는지 확인하는 함수
 
@@ -30,10 +30,17 @@ int main(void) {
 
 		printf("좌표 (ex, A1) : ");
 		scanf(" %c %c", &x, &y); // 플레이어가 원하는 좌표를 입력받는다.
-		if (count % 2 == 0) 
-			fix_board(x-'A', y-'0' - 1, 'O');
-		else
-			fix_board(x-'A', y-'0' - 1, 'X');
+		if (count % 2 == 0) {
+			while (fix_board(x-'A', y-'0' - 1, 'O')!=0) {
+				printf("잘못두셨습니다. 다시 두세요 :");
+				scanf(" %c %c", &x, &y); // 플레이어가 원하는 좌표를 입력받는다.
+			}
+		} else {
+			while (fix_board(x-'A', y-'0' - 1, 'X')!=0) {
+				printf("잘못두셨습니다. 다시 두세요 :");
+				scanf(" %c %c", &x, &y); // 플레이어가 원하는 좌표를 입력받는다.
+			}
+		}
 		system("clear");
 		print_board();		// 돌 놓은곳을 반영하여 출력해준다.
 
@@ -92,7 +99,7 @@ void print_board() {
 
 // 보드에 돌을 놓는 함수
 // row, col 에다가 dol을 놓는다.
-void fix_board(int row, int col, char dol) {
+int fix_board(int row, int col, char dol) {
 	int i, x, y;
 	if ( col < 3 ) {
 		if( row < 3) i = 0;
@@ -104,7 +111,11 @@ void fix_board(int row, int col, char dol) {
 	}
 	x = col % 3;
 	y = row % 3;
-	arr[i][x][y] = dol;
+	if (arr[i][x][y] == ' ') {
+		arr[i][x][y] = dol;
+		return 0;
+	}
+	else return -1;
 }
 
 // 보드의 한 사분면을 회전하는 함수, is_clock_wise 가 y이거나 Y이면 시계방향 회전이다.
