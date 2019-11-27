@@ -74,10 +74,11 @@ void init_board() {
 
 
 void print_board() {
-	printf("  A B C D E F \n");
+	printf(" │ A │ B │ C │ D │ E │ F │\n");
+	printf("─┼───┼───┼───┼───┼───┼───┼──\n");
 	int i=0, j=0, k=0;
 	for(int l = 0; l < 6; l++) {
-		printf("%d ", l+1);
+		printf("%d│", l+1);
 		for (int m = 0; m < 6; m++) {
 			if (l < 3) {
 				if(m < 3) i = 0;
@@ -90,10 +91,10 @@ void print_board() {
 			
 			j = l % 3;
 			k = m % 3;
-			printf("%c ", arr[i][j][k]);
+			printf(" %c │", arr[i][j][k]);
 			
 		}
-		printf("\n");
+		printf("\n─┼───┼───┼───┼───┼───┼───┼──\n");
 	}
 }
 
