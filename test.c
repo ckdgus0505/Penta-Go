@@ -220,7 +220,7 @@ void rotate_board(int quad, char is_clock_wise) {
 			}
 		}
 	}
-	
+	count = 0;	
 	//세로
 	for(int i = 0 ; i < 2 ; i++) {
 		for(int j = 0 ; j < 3 ; j++) {
@@ -267,7 +267,7 @@ void rotate_board(int quad, char is_clock_wise) {
 			}
 		}
 	}
-	
+	count = 0;
 	//왼쪽 위에서 오른쪽 아래 대각선
 	if((arr[0][1][1] == 'O' && arr[0][2][2] == 'O') ||
 			(arr[0][1][1] == 'X' && arr[0][2][2] == 'X')) {
@@ -308,7 +308,7 @@ void rotate_board(int quad, char is_clock_wise) {
 			}
 		}
 	}
-	
+	count = 0;
 	//오른쪽 위에서 왼쪽 아래 대각선
 	if((arr[1][1][1] == 'O' && arr[1][2][0] == 'O') ||
 			arr[1][1][1] == 'X' && arr[1][2][0] == 'X') {
@@ -351,7 +351,7 @@ void rotate_board(int quad, char is_clock_wise) {
 			}
 		}
 	}
-
+	count = 0;
 	if(arr[1][2][0] == 'O' || arr[1][2][0] == 'X') {
 		for(int i = 0 ; i < 4 ; i += 3) {
 			for(int j = 0 ; j < 2 ; j++) {
@@ -374,7 +374,7 @@ void rotate_board(int quad, char is_clock_wise) {
       count = 0;
 		}
 	}
-
+	count = 0;
 	if(arr[2][0][2] == 'O' || arr[2][0][2] == 'X'){
 		for(int i = 0 ; i < 4 ; i += 3) {
 			for(int j = 1 ; j < 3 ; j++) {
@@ -397,7 +397,7 @@ void rotate_board(int quad, char is_clock_wise) {
       count = 0;
 		}
 	}
-
+	count = 0;
 	if(arr[0][2][2] == 'O' || arr[0][2][2] == 'X') {
 	  for(int i = 1 ; i < 3 ; i ++) {
   	  for(int j = 0 ; j < 2 ; j++) {
@@ -420,7 +420,7 @@ void rotate_board(int quad, char is_clock_wise) {
       count = 0;
     }
 	}
-
+	count = 0;
 	if(arr[3][0][0] == 'O' || arr[3][0][0] == 'X'){
  	 for(int i = 1 ; i < 3 ; i ++) {
 	    for(int j = 1 ; j < 3 ; j++) {
