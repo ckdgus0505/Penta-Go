@@ -256,86 +256,46 @@ void rotate_board(int ns) {
 
  int check_pentago();int check_pentago() {
 	int count = 0;
-
 	//가로
-	for(int i = 0 ; i < 4 ; i += 2) {
-		for(int j = 0 ; j < 3 ; j++) {
-			if((arr[i][j][1] == 'O' && arr[i][j][2] == 'O') ||
-					(arr[i][j][1] == 'X' && arr[i][j][2] == 'X')) {
-				if(arr[i][j][0] == arr[i][j][1]) {
-					if(arr[i][j][0] == arr[i][j][2]) {
-						for(int k = 0 ; k < 2 ; k++){
-							if(arr[i][j][0] == arr[i+1][j][k]){
-								count++;
-							}
-						}
+	for(int i = 0 ; i < 6 ; i++) {
+		for(int j = 1 ; j < 5 ; j++) {
+			if(arr[i][j] == " ") {
+				break;
+			}
+		}
+		if(arr[i][0] != " " || arr[i][5] != " ") {
+			for(int j = 0 ; j < 6 ; j += 5) {
+				for(int k = 1 ; k < 5 ; k++) {
+					if(arr[i][j] == arr[i][k]) {
+						count++;
 					}
 				}
-				if(count == 2) {
+				if(count == 4) {
 					return 1;
 				}
 				else {
-					count = 0;
+					count = 0 ;
 				}
-				if(arr[i][j][1] == arr[i][j][2]) {
-					for(int k = 0 ; k < 3 ; k++) {
-						if(arr[i][j][1] == arr[i+1][j][k]) {
-							count++;
-						}
-					}
-				}
-				if(count == 3){
-					return 1;
-				} 
-				else {
-					count = 0;
-				}
-			}	
-			else {
-				continue;
 			}
 		}
 	}
-	count = 0;	
 	//세로
-	for(int i = 0 ; i < 2 ; i++) {
-		for(int j = 0 ; j < 3 ; j++) {
-			if((arr[i][1][j] == 'O' && arr[i][2][j] == 'O') ||
-					(arr[i][1][j] == 'X' && arr[i][2][j] == 'X')) {
-				if(arr[i][1][j] == arr[i][0][j]) {
-					if(arr[i][1][j] == arr[i][2][j]) {
-						for(int k = 0 ; k < 2 ; k++) {
-							if(arr[i][0][j] == arr[i+2][k][j]) {
-								count++;
-							}
-						}
+	count = 0;
+	for(int i = 0 ; i < 6 ; i++) {
+		for(int j = 1 ; j < 5 ; j++) {
+			if(arr[j][i] == " ") {
+				break;
+			}
+		}
+		if(arr[0][i] != " " || arr[5][i] != " ") {
+			for(int j = 0 ; j < 6 ; j += 5 ) {
+				for(int k = 1 ; k < 5 ; k++) {
+					if(arr[j][i] == arr[k][i]) {
+						count++;
 					}
 				}
-				if(count == 2) {
-					if(arr[i][1][j] == 'O') {
-						return 1;
-					}
-					else {
-						return 2;
-					}
-				}
-				else {
-					count = 0;
-				}
-				if(arr[i][1][j] == arr[i][2][j]) {
-					for(int k = 0 ; k < 3 ; k++) {
-						if(arr[i][1][j] == arr[i+2][k][j]) {
-							count++;
-						}
-					}
-				}
-				if(count == 3) {
-					if(arr[i][1][j] == 'O') {
-						return 1;
-					}
-					else {
-						return 2;
-					}
+				if(count == 4) {
+					return 1;
 				}
 				else {
 					count = 0;
@@ -343,183 +303,113 @@ void rotate_board(int ns) {
 			}
 		}
 	}
+	//왼쪽 위 오른쪽 아래 1
 	count = 0;
-	//왼쪽 위에서 오른쪽 아래 대각선
-	if((arr[0][1][1] == 'O' && arr[0][2][2] == 'O') ||
-			(arr[0][1][1] == 'X' && arr[0][2][2] == 'X')) {
-		if(arr[0][1][1] == arr[0][2][2]) {
-			if(arr[0][1][1] == arr[0][0][0]) {
-				for(int i = 0 ; i < 2 ; i++) {
-					if(arr[0][1][1] == arr[3][i][i]) {
+	{
+		for(int i = 1 ; i < 5 ; i++) {
+			if(arr[i][i] == " ") {
+				break;
+			}
+		}
+		if(arr[0][0] != " " || arr[5][5]) {
+			for(int i = 0 ; i < 6 ; i += 5) {
+				for(int j = 1 ; j < 5 ; j++) {
+					if(arr[i][i] == arr[j][j]) {
 						count++;
 					}
 				}
-			}
-			if(count == 2) {
-			  if(arr[0][1][1] == 'O') {
-    			return 1;
-  			}
-  			else {
-    			return 2;
-			  }
-			}
-			else {
-				count = 0;
-			}
-			for(int i = 0 ; i < 3 ; i++) {
-				if(arr[0][1][1] == arr[3][i][i]) {
-					count++;
+				if(count == 4) {
+					return 1;
 				}
-			}
-			if(count == 3) {
-			  if(arr[0][1][1] == 'O') {
-			    return 1;
-			  }
-			  else {
-			    return 2;
-			  }
-			}
-			else {
-				count = 0;
+				else {
+					count = 0 ;
+				}
 			}
 		}
 	}
+	//왼쪽 아래 오른쪽 위 2
 	count = 0;
-	//오른쪽 위에서 왼쪽 아래 대각선
-	if((arr[1][1][1] == 'O' && arr[1][2][0] == 'O') ||
-			arr[1][1][1] == 'X' && arr[1][2][0] == 'X') {
-		if(arr[1][1][1] == arr [1][2][0]) {
-			if(arr[1][1][1] == arr[1][0][2]) {
-				int temp = 2;
-				for(int i = 0 ; i < 2 ; i++) {
-					if(arr[1][1][1]==arr[2][i][temp--]) {
+	{
+		for(int i = 1, j = 4 ; i < 5 ; i++, j--) {
+			if(arr[i][j] == " ") {
+				break;
+			}
+		}
+		if(arr[0][5] != " " || arr[5][0] != " ") {
+			for(int i = 0 , j = 5 ; i < 6 ; i += 5, j -= 5) {
+				for(int k = 1, l = 4 ; k < 5 ; k++, l--) {
+					if(arr[i][j] == arr[k][l]) {
 						count++;
 					}
 				}
-				if(count == 2) {
-					if(arr[1][1][1] == 'O') {
-				    return 1;
-				  }
-				  else {
-				    return 2;
-				  }
+				if(count == 4) {
+					return 1;
 				}
 				else {
 					count = 0;
 				}
 			}
-			int temp = 2;
-			for(int i = 0 ; i < 3 ; i++) {
-				if(arr[1][1][1] == arr[2][i][temp--]) {
-					count++;
-				}
-			}
-			if(count == 3) {
-			  if(arr[1][1][1] == 'O') {
-			    return 1;
-			  }
-			  else {
-			    return 2;
-			  }
-			}
-			else {
-				count = 0;
-			}
 		}
 	}
+	//왼쪽 위 오른쪽 아래 4개 위 3
 	count = 0;
-	if(arr[1][2][0] == 'O' || arr[1][2][0] == 'X') {
-		for(int i = 0 ; i < 4 ; i += 3) {
-			for(int j = 0 ; j < 2 ; j++) {
-				for(int k = 1 ; k < 3 ; k++) {
-					if(arr[1][2][0] == arr[i][j][k]) {
-						count++;
-					}
-				}
+	if(arr[0][1] != " ") {
+		for(int i = 1 ; i < 5 ; i++) {
+			if(arr[0][1] == arr[i][i+1]) {
+				count++;
 			}
 		}
-    if(count == 4) {
-      if(arr[1][2][0] == 'O') {
-        return 1;
-      }
-      else {
-        return 2;
-      }
-    }
-    else {
-      count = 0;
+		if(count == 4) {
+			return 1;
+		}
+		else {
+			count = 0 ;
 		}
 	}
+	//왼쪽 위 오른쪽 아래 4개 아래 4
 	count = 0;
-	if(arr[2][0][2] == 'O' || arr[2][0][2] == 'X'){
-		for(int i = 0 ; i < 4 ; i += 3) {
-			for(int j = 1 ; j < 3 ; j++) {
-				for(int k = 0 ; k < 2 ; k++) {
-					if(arr[2][0][2] == arr[i][j][k]) {
-						count++;
-					}
-				}
+	if(arr[1][0] != " ") {
+		for(int i = 1 ; i < 5 ; i++) {
+			if(arr[1][0] == arr[i+1][i]) {
+				count++;
 			}
 		}
-    if(count == 4) {
-      if(arr[2][0][2] == 'O') {
-        return 1;
-      }
-      else {
-	      return 2;
-      }
-    }
-    else {
-      count = 0;
+		if(count == 4) {
+			return 1;
+		}
+		else {
+			count = 0;
 		}
 	}
+	//왼쪽 아래 오른쪽 위 4개 위 5
 	count = 0;
-	if(arr[0][2][2] == 'O' || arr[0][2][2] == 'X') {
-	  for(int i = 1 ; i < 3 ; i ++) {
-  	  for(int j = 0 ; j < 2 ; j++) {
-   		  for(int k = 1 ; k >= 0 ; k--) {
-					if(arr[0][2][2] == arr[i][j][k]) {
-   	        count++;
-   	     	}
-   	   	}
-	   	}
-	  }
-    if(count == 4) {
-      if(arr[0][2][2] == 'O') {
-        return 1;
-      }
-      else {
-        return 2;
- 	   }
-    }
-    else {
-      count = 0;
-    }
+	if(arr[0][4] != " ") {
+		for(int i = 1, j = 3; i < 5 ; i++, j--) {
+			if(arr[0][4] == arr[i][j]) {
+				count++;
+			}
+		}
+		if(count == 4) {
+			return 1;
+		}
+		else {
+			count = 0;
+		}
 	}
+	//왼쪽 아래 오른쪽 위 4개 아래 6
 	count = 0;
-	if(arr[3][0][0] == 'O' || arr[3][0][0] == 'X'){
- 	 for(int i = 1 ; i < 3 ; i ++) {
-	    for(int j = 1 ; j < 3 ; j++) {
-	      for(int k = 2 ; k >= 0 ; k--) {
-	        if(arr[3][0][0] == arr[i][j][k]) {
-	          count++;
-	        }
-	      }
-	    }
-	  }
-    if(count == 4) {
-      if(arr[3][0][0] == 'O') {
-        return 1;
-      }
-      else {
-        return 2;
-      }
-    }
-    else {
-      count = 0;
-    }
+	if(arr[1][5] != " ") {
+		for(int i = 2, j = 4 ; i < 6 ; i++, j--) {
+			if(arr[1][5] == arr[i][j]) {
+				count++;
+			}
+		}
+		if(count == 4) {
+			return 1;
+		}
+		else {
+			count = 0;
+		}
 	}
-
 	return 0;
 }
-*/
