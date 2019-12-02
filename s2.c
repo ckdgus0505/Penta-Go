@@ -124,7 +124,7 @@ void print_board() {
 }
 
 void send_board(int ns) {
-	char buf[366];
+	char buf[365];
 	memset(buf, 0, sizeof(buf));
 	int i, j;
 	print_board();
@@ -147,7 +147,7 @@ void send_board(int ns) {
 			}
 		}
 	}
-	buf[365] = '\0';
+	buf[364] = '\0';
 	if(send(ns, buf, strlen(buf) + 1, 0) == -1) {
 		perror("send");
 		exit(1);
@@ -159,8 +159,10 @@ void send_board(int ns) {
 void fix_board(int ns) {
 	char rowcol[4];
 	int row, col;
-
-	if(send(ns, "좌표 (ex, A1) :", strlen("좌표 (ex, A1) :") + 1, 0) == -1) {
+	char *return_true = "0";
+	char *return_false = "-1";
+	char *buf = "OK";
+	if(send(ns, buf, strlen(buf) + 1, 0) == -1) {
 		perror("send");
 		exit(1);
 	}
@@ -180,12 +182,12 @@ void fix_board(int ns) {
 	printf("%d %d\n", row, col);
 	if (arr[row][col] == ' ') {
 		arr[row][col] = rowcol[2];
-		if(send(ns, "0", strlen("0") + 1, 0) == -1) {
+		if(send(ns, return_true, strlen(return_true) + 1, 0) == -1) {
 			perror("send");
 			exit(1);
 		}
 	} else {
-		if(send(ns, "-1", strlen("-1") + 1, 0) == -1) {
+		if(send(ns, return_false, strlen(return_false) + 1, 0) == -1) {
 			perror("send");
 			exit(1);
 		}
@@ -204,7 +206,8 @@ void fix_board(int ns) {
 void rotate_board(int ns) {
 	int row, col;
 	char qc[3];
-	if(send(ns, "1", strlen("1") + 1, 0) == -1) {
+	char *dummy = "1";
+	if(send(ns, dummy, strlen(dummy) + 1, 0) == -1) {
 		perror("send");
 		exit(1);
 	}
@@ -230,8 +233,8 @@ void rotate_board(int ns) {
 	for (int i = 0; i < qc[1]-'0'; i++) {
 		char tmp = arr[0+row][0+col];
 		arr[0+row][0+col] = arr[2+row][0+col];
-		arr[2+row][0+col] = arr[2][2+col];
-		arr[2+row][2+col] = arr[0][2+col];
+		arr[2+row][0+col] = arr[2+row][2+col];
+		arr[2+row][2+col] = arr[0+row][2+col];
 		arr[0+row][2+col] = tmp;
 		tmp = arr[0+row][1+row];
 		arr[0+row][1+col] = arr[1+row][0+col];
@@ -240,7 +243,7 @@ void rotate_board(int ns) {
 		arr[1+row][2+col] = tmp;
 	}
 
-	if(send(ns, "1", strlen("1") + 1, 0) == -1) {
+	if(send(ns, dummy, strlen(dummy) + 1, 0) == -1) {
 		perror("send");
 		exit(1);
 	}

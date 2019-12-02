@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio_ext.h>
 
 #define PORTNUM 5050
 
@@ -57,9 +58,9 @@ int main(void) {
 }
 
 void get_board(int sd) {
-	char buf[366];
-
-	if(send(sd, "1", strlen("1")+1, 0) == -1) {
+	char buf[365];
+	char *num = "1";
+	if(send(sd, num, strlen(num)+1, 0) == -1) {
 		perror("send");
 		exit(1);
 	}
@@ -73,6 +74,7 @@ void get_board(int sd) {
 
 	for(int i = 0; i < 14; i++) {
 		for(int j = 0; j < 26; j++) {
+	fflush(stdout);
 			printf("%c", buf[26*i + j]);
 		}
 		printf("\n");
@@ -85,10 +87,11 @@ void get_board(int sd) {
 // row, col 에다가 dol을 놓는다.
 int send_fix_board(int sd, char dol) {
 	char x, y;
-	char buf[1024];
+	char buf[128];
 	char str[4];
 	char rcv[2];
-	if(send(sd, "2", strlen("2")+1, 0) == -1) {
+	char *num = "2";
+	if(send(sd, num, strlen(num)+1, 0) == -1) {
 		perror("send");
 		exit(1);
 	}
@@ -98,11 +101,16 @@ int send_fix_board(int sd, char dol) {
 		perror("recv");
 		exit(1);
 	}
+	fflush(stdout);
 	printf("좌표 receive\n");
-	printf("%s\n", buf);
+	printf("좌표 (ex, A1) :\n");
 
 	while(1) {
-		scanf(" %c %c", &x, &y); // 플레이어가 원하는 좌표를 입력받는다.
+		// 플레이어가 원하는 좌표를 입력받는다.
+		__fpurge(stdin);
+		x = getc(stdin);
+		y = getc(stdin);
+		__fpurge(stdin);
 		if (( (x >= 'A' && x <= 'F') || (x >= 'a' && x <= 'f')) && y >= '1' && y <= '6') {
 			if (x >= 'a' && x <= 'f') x -= 32; // 'a' - 'A' = 32 소문자를 대문자로
 			break;
@@ -113,7 +121,7 @@ int send_fix_board(int sd, char dol) {
 	}
 	str[0] = x;
 	str[1] = y;
-	str[2] = 'O';
+	str[2] = dol;
 	str[3] = '\0';
 
 	if(send(sd, str, strlen(str)+1, 0) == -1) {
@@ -131,12 +139,12 @@ int send_fix_board(int sd, char dol) {
 
 void rotate_board(int sd) {
 	char quadrant;			// 회전시킬 사분면을 저장하는 변수
-	char buf[1];
+	char buf[16];
 	char c;							// 시계방향? 
 	char str[3];
-	printf("run rotate_board()\n");	
+	char *num = "3";
 
-	if(send(sd, "3", strlen("3")+1, 0) == -1) {
+	if(send(sd, num, strlen(num)+1, 0) == -1) {
 		perror("send");
 		exit(1);
 	}
@@ -144,6 +152,7 @@ void rotate_board(int sd) {
 		perror("recv");
 		exit(1);
 	}
+	fflush(stdout);
 	printf("fnum send\n");
 	printf("┌┬┐\n");
 	printf("│ 1 │ 2 │\n");
@@ -153,13 +162,17 @@ void rotate_board(int sd) {
 
 	printf("회전할 사분면\n");
 	while (1) {
-		scanf(" %c", &quadrant);
+		__fpurge(stdin);
+		quadrant = getc(stdin);
+		__fpurge(stdin);
 		if (quadrant - '0' >= 1 && quadrant - '0' <= 4) break;
 			printf("잘못 입력하셨습니다. 다시 입력하세요 :");
 	}
 	printf("시계방향?(y/n)\n");
 	while (1) {
-		scanf(" %c", &c);
+		__fpurge(stdin);
+		c = getc(stdin);
+		__fpurge(stdin);
 		if (c == 'y' || c == 'Y' || c == 'n' || c == 'N') {
 			if (c == 'y' || c == 'Y') c = '1';
 			else c = '3';
@@ -181,6 +194,7 @@ void rotate_board(int sd) {
 		perror("recv");
 		exit(1);
 	}
+	fflush(stdout);
 	
 
 }
