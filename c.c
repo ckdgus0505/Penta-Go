@@ -43,12 +43,13 @@ int main(void) {
 		exit(1);
 	}
 
-	get_board(sd);
 
-	while (send_fix_board(sd, '0') != 0);
-	get_board(sd);
-	get_board(sd);
+	while (is_end == 0) {
+		get_board(sd);
 
+		while (send_fix_board(sd, '0') != 0);
+		get_board(sd);
+	}
 	close(sd);
 
 	return 0;
@@ -123,6 +124,6 @@ int send_fix_board(int sd, char dol) {
 		perror("recv");
 		exit(1);
 	}
-	if (strcmp(rcv, "-1") == 0)	return 0;
+	if (strcmp(rcv, "0") == 0)	return 0;
 	else return -1;
 }

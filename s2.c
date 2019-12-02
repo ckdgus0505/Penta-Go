@@ -12,7 +12,7 @@
 
 #define PORTNUM 5050
 
-void hamdler(int signo) {
+void handler(int signo) {
 	printf("lose\n");
 	exit(1);
 }
@@ -47,6 +47,8 @@ int main(void) {
 	sin.sin_port = htons(PORTNUM);
 	sin.sin_addr.s_addr = inet_addr("127.0.0.1");
 
+	system("clear");
+	printf("도전자를 기다리는중...\n");
 	if(bind(sd, (struct sockaddr *)&sin, sizeof(sin))) {
 		perror("bind");
 		exit(1);
@@ -63,27 +65,28 @@ int main(void) {
 	}
 
 		system("clear");
-		printf("플레이어 차례입니다.\n");
+		printf("게임이 1초내로 시작됩니다.\n");
+		sleep(1);
 		signal(SIGALRM, handler);
 		int count = 0;
 		init_board(); // 게임을 시작하기 전 보드의 상태를 초기화 한다.
-		sleep(1);
-
 	while(is_end == 0) {
-		char *type[2];
-		if (recv(ns, type, sizeof(type), 0) == -1) {
+		system("clear");
+		print_board();
+		char type[2];
+		if (recv(ns, type, sizeof(type), 0) == -1) { // 필요 함수를 받는다.
 			perror("recv");
 			exit(1);
 		}
 		printf("fnum get\n");
-//		system("clear");
-		print_board();
-		if( strcmp(type, "1") == 0) {
+		if( strcmp(type, "1") == 0) { // send_board를 실행
+			printf("do send_board()\n");
 			send_board(ns);
-		}
-		else if(strcmp(type, "2") == 0) {
+		} else if(strcmp(type, "2") == 0) { // fix_board를 실행
+			printf("do fix_board()\n");
 			fix_board(ns);
-		}
+		} else if (strcmp(type, "3") == 0) { // rotate_board를 실행
+			rotate_board(int quad, char is_clock_wise); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
 	}
 
 	close(ns);
@@ -110,7 +113,7 @@ void print_board() {
 	for(int l = 0; l < 6; l++) {
 		printf("%d│", l+1);
 		for (int m = 0; m < 6; m++) {
-			printf(" %c │", arr[i][j]);
+			printf(" %c │", arr[l][m]);
 		}
 		printf("\n─┼───┼───┼───┼───┼───┼───┼\n");
 	}
@@ -120,6 +123,7 @@ void send_board(int ns) {
 	char buf[366];
 	memset(buf, 0, sizeof(buf));
 	int i, j;
+	print_board();
 	for(i = 0; i < 14; i++) {
 		for(j = 0; j < 26; j++) {
 			if ( i == 0 ) {
@@ -144,7 +148,6 @@ void send_board(int ns) {
 		perror("send");
 		exit(1);
 	}
-
 }
 
 // 보드에 돌을 놓는 함수
@@ -164,12 +167,13 @@ void fix_board(int ns) {
 		exit(1);
 	}
 
-	printf("좌표 receive  : %s\n", rowcol);
+	printf("좌표 receive  : %c %c %s\n", rowcol[0], rowcol[1], rowcol);
 	sleep(1);
 
 	row = rowcol[1] - '0' - 1;
 	col = rowcol[0] - 'A';
 
+	printf("%d %d\n", row, col);
 	if (arr[row][col] == ' ') {
 		arr[row][col] = rowcol[2];
 		if(send(ns, "0", strlen("0") + 1, 0) == -1) {
