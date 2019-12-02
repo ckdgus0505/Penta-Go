@@ -42,6 +42,7 @@ int main(void) {
 		exit(1);
 	}
 
+	printf("입장 중\n");
 
 	while (is_end == 0) {
 		get_board(sd);
@@ -60,14 +61,13 @@ int main(void) {
 
 void get_board(int sd) {
 	char buf[365];
-	char *num = "1";
-	if(send(sd, num, strlen(num)+1, 0) == -1) {
+	if(send(sd, "1", strlen("1")+1, 0) == -1) {
 		perror("send");
 		exit(1);
 	}
-	
-	system("clear");
 
+	system("clear");
+	
 	if(recv(sd, buf, sizeof(buf), 0) == -1) {
 		perror("recv");
 		exit(1);
@@ -91,8 +91,7 @@ int send_fix_board(int sd, char dol) {
 	char buf[128];
 	char str[4];
 	char rcv[4];
-	char *num = "2";
-	if(send(sd, num, strlen(num)+1, 0) == -1) {
+	if(send(sd, "2", strlen("2")+1, 0) == -1) {
 		perror("send");
 		exit(1);
 	}
@@ -143,9 +142,8 @@ void rotate_board(int sd) {
 	char buf[16];
 	char c;							// 시계방향? 
 	char str[3];
-	char *num = "3";
 
-	if(send(sd, num, strlen(num)+1, 0) == -1) {
+	if(send(sd, "3", strlen("3")+1, 0) == -1) {
 		perror("send");
 		exit(1);
 	}
@@ -183,7 +181,7 @@ void rotate_board(int sd) {
 	str[0] = quadrant;
 	str[1] = c;
 	str[2] = '\0';
-	printf("%s\n", str);	
+	printf("x,y: %s\n", str);	
 	if(send(sd, str, strlen(str)+1, 0) == -1) {
 		perror("send");
 		exit(1);

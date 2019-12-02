@@ -162,10 +162,7 @@ void send_board(int ns) {
 void fix_board(int ns) {
 	char rowcol[4];
 	int row, col;
-	char *return_true = "0";
-	char *return_false = "-1";
-	char *buf = "OK";
-	if(send(ns, buf, strlen(buf) + 1, 0) == -1) {
+	if(send(ns, "OK", strlen("OK") + 1, 0) == -1) { // 의미 없음
 		perror("send");
 		exit(1);
 	}
@@ -185,12 +182,12 @@ void fix_board(int ns) {
 	printf("%d %d\n", row, col);
 	if (arr[row][col] == ' ') {
 		arr[row][col] = rowcol[2];
-		if(send(ns, return_true, strlen(return_true) + 1, 0) == -1) {
+		if(send(ns, "0", strlen("0") + 1, 0) == -1) {
 			perror("send");
 			exit(1);
 		}
 	} else {
-		if(send(ns, return_false, strlen(return_false) + 1, 0) == -1) {
+		if(send(ns, "-1", strlen("-1") + 1, 0) == -1) {
 			perror("send");
 			exit(1);
 		}
@@ -209,8 +206,7 @@ void fix_board(int ns) {
 void rotate_board(int ns) {
 	int row, col;
 	char qc[3];
-	char *dummy = "1";
-	if(send(ns, dummy, strlen(dummy) + 1, 0) == -1) {
+	if(send(ns, "1", strlen("1") + 1, 0) == -1) { // 의미 없음
 		perror("send");
 		exit(1);
 	}
@@ -219,7 +215,7 @@ void rotate_board(int ns) {
 		perror("recv");
 		exit(1);
 	}
-	printf("%s\n", qc);
+	printf("qc : %s\n", qc);
 	if (qc[0] == '1') {
 		row = 0;
 		col = 0;
@@ -239,14 +235,14 @@ void rotate_board(int ns) {
 		arr[2+row][0+col] = arr[2+row][2+col];
 		arr[2+row][2+col] = arr[0+row][2+col];
 		arr[0+row][2+col] = tmp;
-		tmp = arr[0+row][1+row];
+		tmp = arr[0+row][1+col];
 		arr[0+row][1+col] = arr[1+row][0+col];
 		arr[1+row][0+col] = arr[2+row][1+col];
 		arr[2+row][1+col] = arr[1+row][2+col];
 		arr[1+row][2+col] = tmp;
 	}
 
-	if(send(ns, dummy, strlen(dummy) + 1, 0) == -1) {
+	if(send(ns, "1", strlen("1") + 1, 0) == -1) { // 의미 없음
 		perror("send");
 		exit(1);
 	}
@@ -300,7 +296,8 @@ int check_pentago() {
 		}
 		notNull = 0;
 	}
-
+	return 0;
+} /*
 	//세로
 
 	count = 0;
@@ -435,4 +432,4 @@ int check_pentago() {
 		}
 	}
 	return 0;
-}
+}*/
