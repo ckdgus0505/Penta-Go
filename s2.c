@@ -66,7 +66,7 @@ int main(void) {
 	}
 
 		system("clear");
-		printf("게임이 1초내로 시작됩니다.\n");
+		printf("게임이 1분 안에 시작됩니다.\n");
 		sleep(1);
 		signal(SIGALRM, handler);
 		int count = 0;
