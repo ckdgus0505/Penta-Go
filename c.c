@@ -89,7 +89,7 @@ int send_fix_board(int sd, char dol) {
 	char x, y;
 	char buf[128];
 	char str[4];
-	char rcv[2];
+	char rcv[4];
 	char *num = "2";
 	if(send(sd, num, strlen(num)+1, 0) == -1) {
 		perror("send");
@@ -154,11 +154,11 @@ void rotate_board(int sd) {
 	}
 	fflush(stdout);
 	printf("fnum send\n");
-	printf("┌┬┐\n");
+	printf("┌───┬───┐\n");
 	printf("│ 1 │ 2 │\n");
-	printf("├┼┤\n");
+	printf("├───┼───┤\n");
 	printf("│ 3 │ 4 │\n");
-	printf("└┴┘\n");
+	printf("└───┴───┘\n");
 
 	printf("회전할 사분면\n");
 	while (1) {
