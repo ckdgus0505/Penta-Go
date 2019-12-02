@@ -30,7 +30,7 @@ void init_board();	// 보드를 깨끗한 상태로 초기화 하는 함수
 void print_board(); // 현재 보드의 상태를 출력해주는 함수
 void send_board(int ns);
 void fix_board(int ns); // 현재 보드의 원하는 위치에 돌을 놓는 함수
-void rotate_board(int quad, char is_clock_wise); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
+void rotate_board(int ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
 int check_pentago(); // 게임이 끝났는지 확인하는 함수
 
 int main(void) {
@@ -70,6 +70,8 @@ int main(void) {
 		signal(SIGALRM, handler);
 		int count = 0;
 		init_board(); // 게임을 시작하기 전 보드의 상태를 초기화 한다.
+
+
 	while(is_end == 0) {
 		system("clear");
 		print_board();
@@ -86,7 +88,9 @@ int main(void) {
 			printf("do fix_board()\n");
 			fix_board(ns);
 		} else if (strcmp(type, "3") == 0) { // rotate_board를 실행
-			rotate_board(int quad, char is_clock_wise); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
+			printf("do rotate_board()\n");
+			rotate_board(ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
+		}
 	}
 
 	close(ns);
@@ -184,12 +188,12 @@ void fix_board(int ns) {
 		if(send(ns, "-1", strlen("-1") + 1, 0) == -1) {
 			perror("send");
 			exit(1);
-			}
 		}
+	}
 	printf("end..\n");
 //	print_board();
 }
-/*
+
 // 보드의 한 사분면을 회전하는 함수, is_clock_wise 가 y이거나 Y이면 시계방향 회전이다.
 //  화면 출력 기준으로 
 
@@ -197,25 +201,52 @@ void fix_board(int ns) {
 //   3 4
 
 //	사분면이다.
-void rotate_board(int quad, char is_clock_wise) {
-	int rotate_n = 3;
-	if ( (is_clock_wise == 'y') || (is_clock_wise == 'Y')) rotate_n = 1;
-
-	for(int i = 0; i < rotate_n; i++) {
-		int temp = arr[quad][0][0];
-		arr[quad][0][0] = arr[quad][2][0];
-		arr[quad][2][0] = arr[quad][2][2];
-		arr[quad][2][2] = arr[quad][0][2];
-		arr[quad][0][2] = temp;
-		temp = arr[quad][0][1];
-		arr[quad][0][1] = arr[quad][1][0];
-		arr[quad][1][0] = arr[quad][2][1];
-		arr[quad][2][1] = arr[quad][1][2];
-		arr[quad][1][2] = temp;
-	
+void rotate_board(int ns) {
+	int row, col;
+	char qc[3];
+	if(send(ns, "1", strlen("1") + 1, 0) == -1) {
+		perror("send");
+		exit(1);
 	}
-}
 
+	if (recv(ns, qc, sizeof(qc), 0) == -1) {
+		perror("recv");
+		exit(1);
+	}
+	printf("%s\n", qc);
+	if (qc[0] == '1') {
+		row = 0;
+		col = 0;
+	} else if (qc[0] == '2') {
+		row = 0;
+		col = 3;
+	} else if (qc[0] == '3') {
+		row = 3;
+		col = 0;
+	} else if (qc[0] == '4') {
+		row = 3;
+		col = 3;
+	}	
+	for (int i = 0; i < qc[1]-'0'; i++) {
+		char tmp = arr[0+row][0+col];
+		arr[0+row][0+col] = arr[2+row][0+col];
+		arr[2+row][0+col] = arr[2][2+col];
+		arr[2+row][2+col] = arr[0][2+col];
+		arr[0+row][2+col] = tmp;
+		tmp = arr[0+row][1+row];
+		arr[0+row][1+col] = arr[1+row][0+col];
+		arr[1+row][0+col] = arr[2+row][1+col];
+		arr[2+row][1+col] = arr[1+row][2+col];
+		arr[1+row][2+col] = tmp;
+	}
+
+	if(send(ns, "1", strlen("1") + 1, 0) == -1) {
+		perror("send");
+		exit(1);
+	}
+
+}
+/*
 
 //게임이 끝났는지 확인하는 함수
 //5개의 돌이 이어졌는지 체크한다.

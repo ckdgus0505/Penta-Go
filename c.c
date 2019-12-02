@@ -15,12 +15,10 @@ int count;
 int is_end;					// 게임이 끝난것을 확인하는 변수,
 										// 0이면 게임이 끝나지 않은 상태,
 										// 1이면 흑돌 win, 2이면, 백돌 win 
-char quadrant;			// 회전시킬 사분면을 저장하는 변수
-char x, y, c;				// x,y는 보드의 좌표축, c는 회전시킬 사분면의 회전 방향,
 										// c 는 clock wise 의 줄임말로, y or Y 가 입력되면 시계방향 회전
 void get_board(int sd); // 현재 보드의 상태를 출력해주는 함수
 int send_fix_board(int sd, char dol); // 현재 보드의 원하는 위치에 돌을 놓는 함수
-void rotate_board(int quad, char is_clock_wise); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
+void rotate_board(int sd); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
 int check_pentago(); // 게임이 끝났는지 확인하는 함수
 
 int main(void) {
@@ -48,6 +46,9 @@ int main(void) {
 		get_board(sd);
 
 		while (send_fix_board(sd, '0') != 0);
+		get_board(sd);
+		rotate_board(sd);
+		system("clear");
 		get_board(sd);
 	}
 	close(sd);
@@ -126,4 +127,60 @@ int send_fix_board(int sd, char dol) {
 	}
 	if (strcmp(rcv, "0") == 0)	return 0;
 	else return -1;
+}
+
+void rotate_board(int sd) {
+	char quadrant;			// 회전시킬 사분면을 저장하는 변수
+	char buf[1];
+	char c;							// 시계방향? 
+	char str[3];
+	printf("run rotate_board()\n");	
+
+	if(send(sd, "3", strlen("3")+1, 0) == -1) {
+		perror("send");
+		exit(1);
+	}
+	if(recv(sd, buf, sizeof(buf), 0) == -1) {
+		perror("recv");
+		exit(1);
+	}
+	printf("fnum send\n");
+	printf("┌┬┐\n");
+	printf("│ 1 │ 2 │\n");
+	printf("├┼┤\n");
+	printf("│ 3 │ 4 │\n");
+	printf("└┴┘\n");
+
+	printf("회전할 사분면\n");
+	while (1) {
+		scanf(" %c", &quadrant);
+		if (quadrant - '0' >= 1 && quadrant - '0' <= 4) break;
+			printf("잘못 입력하셨습니다. 다시 입력하세요 :");
+	}
+	printf("시계방향?(y/n)\n");
+	while (1) {
+		scanf(" %c", &c);
+		if (c == 'y' || c == 'Y' || c == 'n' || c == 'N') {
+			if (c == 'y' || c == 'Y') c = '1';
+			else c = '3';
+			break;
+		} else printf("잘못 입력하셨습니다. 다시 입력하세요 :");
+	}
+	str[0] = quadrant;
+	str[1] = c;
+	str[2] = '\0';
+	printf("%s\n", str);	
+	if(send(sd, str, strlen(str)+1, 0) == -1) {
+		perror("send");
+		exit(1);
+	}
+
+
+
+	if(recv(sd, buf, sizeof(buf), 0) == -1) {
+		perror("recv");
+		exit(1);
+	}
+	
+
 }
