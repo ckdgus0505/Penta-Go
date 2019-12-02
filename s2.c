@@ -32,6 +32,7 @@ void send_board(int ns);
 void fix_board(int ns); // 현재 보드의 원하는 위치에 돌을 놓는 함수
 void rotate_board(int ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
 int check_pentago(); // 게임이 끝났는지 확인하는 함수
+int is_finish(int ns);
 
 int main(void) {
 	struct sockaddr_in sin, cli;
@@ -90,9 +91,11 @@ int main(void) {
 		} else if (strcmp(type, "3") == 0) { // rotate_board를 실행
 			printf("do rotate_board()\n");
 			rotate_board(ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
+		} else if (strcmp(type, "4") == 0) { // rotate_board를 실행
+			printf("is_finish()\n");
+			is_end = is_finish(ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
 		}
 	}
-
 	close(ns);
 	close(sd);
 
@@ -249,21 +252,38 @@ void rotate_board(int ns) {
 	}
 
 }
-/*
+
 
 //게임이 끝났는지 확인하는 함수
 //5개의 돌이 이어졌는지 체크한다.
+int is_finish(int ns) {
+	char str[2];
+	int ret = check_pentago();
+	str[0] = ret + '0';
+	str[1] = '\0';
+	if(send(ns, str, strlen(str) + 1, 0) == -1) {
+		perror("send");
+	}
+	printf(" ret : %d\n", ret);
+	if( ret == 1 ) {
+		return 1; // 게임 끝
+	}
+	else return 0; // 게임 계속 진
+}
 
- int check_pentago();int check_pentago() {
+
+int check_pentago() {
 	int count = 0;
+	int notNull = 0;
 	//가로
 	for(int i = 0 ; i < 6 ; i++) {
 		for(int j = 1 ; j < 5 ; j++) {
-			if(arr[i][j] == " ") {
+			if(arr[i][j] == ' ') {
+				notNull = 1;
 				break;
 			}
 		}
-		if(arr[i][0] != " " || arr[i][5] != " ") {
+		if((notNull != 1 && arr[i][0] != ' ') || (notNull != 1 && arr[i][5] != ' ')) {
 			for(int j = 0 ; j < 6 ; j += 5) {
 				for(int k = 1 ; k < 5 ; k++) {
 					if(arr[i][j] == arr[i][k]) {
@@ -278,16 +298,19 @@ void rotate_board(int ns) {
 				}
 			}
 		}
+		notNull = 0;
 	}
+
 	//세로
+
 	count = 0;
 	for(int i = 0 ; i < 6 ; i++) {
 		for(int j = 1 ; j < 5 ; j++) {
-			if(arr[j][i] == " ") {
+			if(arr[j][i] == ' ') {
 				break;
 			}
 		}
-		if(arr[0][i] != " " || arr[5][i] != " ") {
+		if(arr[0][i] != ' ' || arr[5][i] != ' ') {
 			for(int j = 0 ; j < 6 ; j += 5 ) {
 				for(int k = 1 ; k < 5 ; k++) {
 					if(arr[j][i] == arr[k][i]) {
@@ -311,7 +334,7 @@ void rotate_board(int ns) {
 				break;
 			}
 		}
-		if(arr[0][0] != " " || arr[5][5]) {
+		if(arr[0][0] != ' ' || arr[5][5] != ' ') {
 			for(int i = 0 ; i < 6 ; i += 5) {
 				for(int j = 1 ; j < 5 ; j++) {
 					if(arr[i][i] == arr[j][j]) {
@@ -335,7 +358,7 @@ void rotate_board(int ns) {
 				break;
 			}
 		}
-		if(arr[0][5] != " " || arr[5][0] != " ") {
+		if(arr[0][5] != ' ' || arr[5][0] != ' ') {
 			for(int i = 0 , j = 5 ; i < 6 ; i += 5, j -= 5) {
 				for(int k = 1, l = 4 ; k < 5 ; k++, l--) {
 					if(arr[i][j] == arr[k][l]) {
@@ -353,7 +376,7 @@ void rotate_board(int ns) {
 	}
 	//왼쪽 위 오른쪽 아래 4개 위 3
 	count = 0;
-	if(arr[0][1] != " ") {
+	if(arr[0][1] != ' ') {
 		for(int i = 1 ; i < 5 ; i++) {
 			if(arr[0][1] == arr[i][i+1]) {
 				count++;
@@ -368,7 +391,7 @@ void rotate_board(int ns) {
 	}
 	//왼쪽 위 오른쪽 아래 4개 아래 4
 	count = 0;
-	if(arr[1][0] != " ") {
+	if(arr[1][0] != ' ') {
 		for(int i = 1 ; i < 5 ; i++) {
 			if(arr[1][0] == arr[i+1][i]) {
 				count++;
@@ -383,7 +406,7 @@ void rotate_board(int ns) {
 	}
 	//왼쪽 아래 오른쪽 위 4개 위 5
 	count = 0;
-	if(arr[0][4] != " ") {
+	if(arr[0][4] != ' ') {
 		for(int i = 1, j = 3; i < 5 ; i++, j--) {
 			if(arr[0][4] == arr[i][j]) {
 				count++;
@@ -398,7 +421,7 @@ void rotate_board(int ns) {
 	}
 	//왼쪽 아래 오른쪽 위 4개 아래 6
 	count = 0;
-	if(arr[1][5] != " ") {
+	if(arr[1][5] != ' ') {
 		for(int i = 2, j = 4 ; i < 6 ; i++, j--) {
 			if(arr[1][5] == arr[i][j]) {
 				count++;

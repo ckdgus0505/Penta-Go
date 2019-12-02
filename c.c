@@ -51,6 +51,7 @@ int main(void) {
 		rotate_board(sd);
 		system("clear");
 		get_board(sd);
+		is_end = check_pentago(sd);
 	}
 	close(sd);
 
@@ -197,4 +198,23 @@ void rotate_board(int sd) {
 	fflush(stdout);
 	
 
+}
+
+int check_pentago(int sd) {
+	char buf[2];
+	if(send(sd, "4", strlen("4")+1, 0) == -1) {
+		perror("send");
+		exit(1);
+	}
+	printf("fnum send\n");
+
+	
+	if(recv(sd, buf, sizeof(buf), 0) == -1) {
+		perror("recv");
+		exit(1);
+	}
+
+	printf("received : %s\n", buf);
+	if(strcmp(buf, "0") == 0) return 0;
+	else return 1;
 }
