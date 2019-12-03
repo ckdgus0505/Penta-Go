@@ -10,7 +10,8 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <stdio_ext.h>
-
+#include <fcntl.h>
+#include <sys/stat.h>
 #define PORTNUM 5050
 
 void handler(int signo) {
@@ -37,9 +38,16 @@ void my_rotate_board(int quad, int c); // 현재 보드에 원하는 사분면�
 int check_pentago(); // 게임이 끝났는지 확인하는 함수
 int is_finish(int ns);
 
+int fd;
 int main(void) {
 	struct sockaddr_in sin, cli;
 	int sd, ns, clientlen = sizeof(cli);
+
+	fd = open("pentagolog.txt", O_CREAT | O_WRONLY | O_APPEND ,0664);
+	if (fd == -1) {
+		perror("Creat");
+		exit(1);
+	}
 
 	if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
@@ -105,7 +113,7 @@ int main(void) {
 	}
 	close(ns);
 	close(sd);
-
+	close(fd);
 	return 0;
 }
 
@@ -162,6 +170,9 @@ void send_board(int ns) {
 		perror("send");
 		exit(1);
 	}
+	buf[364] = '\n';
+	buf[365] = '\0';
+	write(fd, buf, 365); /////
 }
 
 // 보드에 돌을 놓는 함수
