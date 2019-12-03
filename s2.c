@@ -270,16 +270,16 @@ int is_finish(int ns) {
 
 int check_pentago() {
 	int count = 0;
-	int notNull = 0;
+	int isNull = 0;
 	//가로
 	for(int i = 0 ; i < 6 ; i++) {
 		for(int j = 1 ; j < 5 ; j++) {
 			if(arr[i][j] == ' ') {
-				notNull = 1;
+				isNull = 1;
 				break;
 			}
 		}
-		if((notNull != 1 && arr[i][0] != ' ') || (notNull != 1 && arr[i][5] != ' ')) {
+		if((isNull != 1 && arr[i][0] != ' ') || (isNull != 1 && arr[i][5] != ' ')) {
 			for(int j = 0 ; j < 6 ; j += 5) {
 				for(int k = 1 ; k < 5 ; k++) {
 					if(arr[i][j] == arr[i][k]) {
@@ -294,20 +294,20 @@ int check_pentago() {
 				}
 			}
 		}
-		notNull = 0;
+		isNull = 0;
 	}
-	return 0;
-} /*
-	//세로
-
+	
+//세로
 	count = 0;
+	isNull = 0;
 	for(int i = 0 ; i < 6 ; i++) {
 		for(int j = 1 ; j < 5 ; j++) {
 			if(arr[j][i] == ' ') {
+				isNull = 1;
 				break;
 			}
 		}
-		if(arr[0][i] != ' ' || arr[5][i] != ' ') {
+		if((isNull != 1 && arr[0][i] != ' ') || (isNull != 1 && arr[5][i] != ' ')) {
 			for(int j = 0 ; j < 6 ; j += 5 ) {
 				for(int k = 1 ; k < 5 ; k++) {
 					if(arr[j][i] == arr[k][i]) {
@@ -322,16 +322,20 @@ int check_pentago() {
 				}
 			}
 		}
+	isNull = 0;
 	}
+
 	//왼쪽 위 오른쪽 아래 1
 	count = 0;
+	isNull = 0;
 	{
 		for(int i = 1 ; i < 5 ; i++) {
-			if(arr[i][i] == " ") {
+			if(arr[i][i] == ' ') {
+				isNull = 1;
 				break;
 			}
 		}
-		if(arr[0][0] != ' ' || arr[5][5] != ' ') {
+		if((isNull != 1 && arr[0][0] != ' ') || (isNull != 1 && arr[5][5] != ' ')) {
 			for(int i = 0 ; i < 6 ; i += 5) {
 				for(int j = 1 ; j < 5 ; j++) {
 					if(arr[i][i] == arr[j][j]) {
@@ -346,16 +350,19 @@ int check_pentago() {
 				}
 			}
 		}
+		isNull = 0;
 	}
 	//왼쪽 아래 오른쪽 위 2
 	count = 0;
+	isNull = 0;
 	{
 		for(int i = 1, j = 4 ; i < 5 ; i++, j--) {
-			if(arr[i][j] == " ") {
+			if(arr[i][j] == ' ') {
+				isNull = 1;
 				break;
 			}
 		}
-		if(arr[0][5] != ' ' || arr[5][0] != ' ') {
+		if((isNull != 1 && arr[0][5] != ' ') || (isNull != 1 && arr[5][0] != ' ')) {
 			for(int i = 0 , j = 5 ; i < 6 ; i += 5, j -= 5) {
 				for(int k = 1, l = 4 ; k < 5 ; k++, l--) {
 					if(arr[i][j] == arr[k][l]) {
@@ -370,6 +377,7 @@ int check_pentago() {
 				}
 			}
 		}
+		isNull = 0;
 	}
 	//왼쪽 위 오른쪽 아래 4개 위 3
 	count = 0;
@@ -432,4 +440,4 @@ int check_pentago() {
 		}
 	}
 	return 0;
-}*/
+}
