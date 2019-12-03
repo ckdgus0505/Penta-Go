@@ -30,8 +30,8 @@ void send_board(int ns);
 void fix_board(int ns); // 현재 보드의 원하는 위치에 돌을 놓는 함수
 void rotate_board(int ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
 
-int my_turn(char dol);
-int my_fix_board(int row, int col, char dol); // 현재 보드의 원하는 위치에 돌을 놓는 함수
+int my_turn(int ns, char dol);
+int my_fix_board(int col, int row, char dol); // 현재 보드의 원하는 위치에 돌을 놓는 함수
 void my_rotate_board(int quad, int c); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
 
 int check_pentago(); // 게임이 끝났는지 확인하는 함수
@@ -97,8 +97,11 @@ int main(void) {
 		} else if (strcmp(type, "4") == 0) { // rotate_board를 실행
 			printf("is_finish()\n");
 			is_end = is_finish(ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
+		} else if (strcmp(type, "5") == 0) { // rotate_board를 실행
+			printf("my_turn()\n");
+			//is_end = is_finish(ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
+			is_end = my_turn(ns, 'X');
 		}
-	//	my_turn('X');
 	}
 	close(ns);
 	close(sd);
@@ -252,8 +255,9 @@ void rotate_board(int ns) {
 
 }
 
-int my_turn(char dol) {
-	int check = 0;
+int my_turn(int ns, char dol) {
+	char str[2];
+	int ret = check_pentago();
 	char x, y, quad, c;
 
 	printf("좌표 (ex, A1) : ");
@@ -277,6 +281,10 @@ int my_turn(char dol) {
 			printf("잘못 입력하셨습니다. 다시 입력하세요 :");
 		}
 	}
+
+	system("clear");
+	print_board();
+
 	printf("┌───┬───┐\n");
 	printf("│ 1 │ 2 │\n");
 	printf("├───┼───┤\n");
@@ -288,13 +296,9 @@ int my_turn(char dol) {
 		__fpurge(stdin);
 		quad = getc(stdin);
 		__fpurge(stdin);
-		if (quad - '0' >= 1 && quad - '0' <= 4) break;
+		if (quad >= '1' && quad <= '4') break;
 		printf("잘못 입력하셨습니다. 다시 입력하세요 :");
 	}
-	system("clear");
-	print_board();
-	check = check_pentago();
-	if(check == 1) return 1; // 게임 끝, 승!
 
 	printf("시계방향?(y/n)\n");
 	while (1) {
@@ -304,17 +308,26 @@ int my_turn(char dol) {
 		if (c == 'y' || c == 'Y' || c == 'n' || c == 'N') break;
 			printf("잘못 입력하셨습니다. 다시 입력하세요 :");
 	}
-	if (c == 'y' || 'Y') my_rotate_board(quad -'0' -1, 1);
-	else my_rotate_board(quad - '0' - 1, 3);
+	if (c == 'y' || c == 'Y') my_rotate_board(quad -'0', 1);
+	else my_rotate_board(quad - '0', 3);
 
 	system("clear");
 	print_board();
-	check = check_pentago();
-	if(check == 1) return 1; // 게임 끝, 승!
-	else return 0; // 계속 게임 진행 
+	ret = check_pentago();
+
+	str[0] = ret + '0';
+	str[1] = '\0';
+	if(send(ns, str, strlen(str) + 1, 0) == -1) {
+		perror("send");
+	}
+	printf(" ret : %d\n", ret);
+	if( ret == 1 ) {
+		return 1; // 게임 끝
+	}
+	else return 0; // 게임 계속 진
 }
 
-int my_fix_board(int row, int col, char dol) {
+int my_fix_board(int col, int row, char dol) {
 
 	if (arr[row][col] == ' ') {
 		arr[row][col] = dol;

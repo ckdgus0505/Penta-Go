@@ -20,7 +20,8 @@ int is_end;					// 게임이 끝난것을 확인하는 변수,
 void get_board(int sd); // 현재 보드의 상태를 출력해주는 함수
 int send_fix_board(int sd, char dol); // 현재 보드의 원하는 위치에 돌을 놓는 함수
 void rotate_board(int sd); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
-int check_pentago(); // 게임이 끝났는지 확인하는 함수
+int check_pentago(int sd); // 게임이 끝났는지 확인하는 함수
+int end_turn(int sd);
 
 int main(void) {
 	int sd;
@@ -53,9 +54,15 @@ int main(void) {
 		system("clear");
 		get_board(sd);
 		is_end = check_pentago(sd);
+		if(is_end != 0) break;
+		is_end = end_turn(sd);
 	}
 	close(sd);
 
+	system("clear");
+	get_board(sd);
+	if (is_end == 2) printf("패배\n");	
+	else printf("승리\n");
 	return 0;
 }
 
@@ -80,7 +87,6 @@ void get_board(int sd) {
 		}
 		printf("\n");
 	}
-
 }
 
 
@@ -216,3 +222,22 @@ int check_pentago(int sd) {
 	if(strcmp(buf, "0") == 0) return 0;
 	else return 1;
 }
+int end_turn(int sd) {
+	char buf[2];
+	if(send(sd, "5", strlen("5")+1, 0) == -1) {
+		perror("send");
+		exit(1);
+	}
+	printf("fnum send\n");
+
+	
+	if(recv(sd, buf, sizeof(buf), 0) == -1) {
+		perror("recv");
+		exit(1);
+	}
+
+	printf("received : %s\n", buf);
+	if(strcmp(buf, "0") == 0) return 0;
+	else return 2;
+}
+	
