@@ -1,47 +1,61 @@
 #include <arpa/inet.h>
-#include <netdb.h>
 #include <sys/un.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <signal.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <sys/time.h>
+#include <fcntl.h>
+#include <time.h>
 #include <stdio_ext.h>
-
-#define PORTNUM 5050
-
-void handler(int signo) {
-	printf("lose\n");
-	exit(1);
-}
+#define PORTNUM 9000
 
 char arr[6][6];	// 펜타고 보드 배열
+int fd;	// 파일 디스크립터 , 기보 저장을 위함
 
-int is_end;					// 게임이 끝난것을 확인하는 변수,
-										// 0이면 게임이 끝나지 않은 상태,
-										// 1이면 흑돌 win, 2이면, 백돌 win 
-
-void init_board();	// 보드를 깨끗한 상태로 초기화 하는 함수
-void print_board(); // 현재 보드의 상태를 출력해주는 함수
-void send_board(int ns);
-void fix_board(int ns); // 현재 보드의 원하는 위치에 돌을 놓는 함수
-void rotate_board(int ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
-
-int my_turn(char dol);
-int my_fix_board(int row, int col, char dol); // 현재 보드의 원하는 위치에 돌을 놓는 함수
-void my_rotate_board(int quad, int c); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
-
-int check_pentago(); // 게임이 끝났는지 확인하는 함수
+/* 클라이언트 플레이 함수 */
+void send_board(int ns);	// 현재 보드를 문자열로 보내는 함수
+void fix_board(int ns);	// 현재 보드의 원하는 위치에 돌을 놓는 함수
+void rotate_board(int ns);	// 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
 int is_finish(int ns);
 
+/* 서버 플레이 함수 */
+void print_board(); // 현재 보드의 상태를 출력해주는 함수
+int my_turn(int ns, char dol);
+void init_board();	// 보드를 깨끗한 상태로 초기화 하는 함수
+int my_fix_board(int col, int row, char dol); // 현재 보드의 원하는 위치에 돌을 놓는 함수
+void my_rotate_board(int quad, int c); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
+int check_pentago(); // 게임이 끝났는지 확인하는 함수
+
 int main(void) {
+	signal(SIGINT, SIG_IGN);
+	char type[2]; // 수행할 서비스의 종류를 저장하기위한 변수
+	char file_name[128];
 	struct sockaddr_in sin, cli;
 	int sd, ns, clientlen = sizeof(cli);
+	struct tm *tm;
+	time_t start_time = time(NULL), end_time;
+	int play_time;
+	int is_end = 0;	// 게임이 끝난것을 확인하는 변수,
+							// 0이면 게임이 끝나지 않은 상태,
+							// 1이면 흑돌 win, 2이면, 백돌 win 
 
-	if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+// 기보를 저장하기 위해 파일 디스크립터 지정
+	tm = localtime(&start_time);
+	sprintf(file_name, "./Pentagologs/%d%02d%02d_%02d_%02d_%02d.txt", (int)tm->tm_year + 1900,
+		(int)tm->tm_mon+1, (int)tm->tm_mday, (int)tm->tm_hour, (int)tm->tm_min, (int)tm->tm_sec);
+	fd = open(file_name, O_CREAT | O_WRONLY | O_APPEND ,0664);
+	if (fd == -1) {
+		perror("Creat");
+		exit(1);
+	}
+
+	if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) { // 소켓 생성하기
 		perror("socket");
 		exit(1);
 	}
@@ -49,14 +63,16 @@ int main(void) {
 	memset((char*)&sin, '\0', sizeof(int));
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(PORTNUM);
-	sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+	//sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+	sin.sin_addr.s_addr = INADDR_ANY;
 
-	system("clear");
-	printf("도전자를 기다리는중...\n");
 	if(bind(sd, (struct sockaddr *)&sin, sizeof(sin))) {
 		perror("bind");
 		exit(1);
 	}
+
+	system("clear");
+	printf("도전자를 기다리는중...\n"); // 소켓 바인드 되기 전까지 대기
 
 	if(listen(sd, 5)) {
 		perror("listen");
@@ -68,41 +84,44 @@ int main(void) {
 		exit(1);
 	}
 
-		system("clear");
-		printf("게임이 1분 안에 시작됩니다.\n");
-		sleep(1);
-		signal(SIGALRM, handler);
-		int count = 0;
-		init_board(); // 게임을 시작하기 전 보드의 상태를 초기화 한다.
+	system("clear");
+	printf("게임이 시작됩니다.\n");
+	 sleep(1);
 
+	init_board(); // 게임을 시작하기 전 보드의 상태를 초기화 한다.
 
-	while(is_end == 0) {
+	start_time = time(NULL); // 게임 시작 시각 
+	while(is_end == 0) { // 플레이 하는 일련의 과정
 		system("clear");
-		print_board();
-		char type[2];
-		if (recv(ns, type, sizeof(type), 0) == -1) { // 필요 함수를 받는다.
+		print_board(); // 보드를 출력함
+
+		if (recv(ns, type, sizeof(type), 0) == -1) { // 수행할 서비스 종류 받는다
 			perror("recv");
 			exit(1);
 		}
-		printf("fnum get\n");
+
 		if( strcmp(type, "1") == 0) { // send_board를 실행
-			printf("do send_board()\n");
 			send_board(ns);
 		} else if(strcmp(type, "2") == 0) { // fix_board를 실행
-			printf("do fix_board()\n");
 			fix_board(ns);
 		} else if (strcmp(type, "3") == 0) { // rotate_board를 실행
-			printf("do rotate_board()\n");
-			rotate_board(ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
+			rotate_board(ns); 
 		} else if (strcmp(type, "4") == 0) { // rotate_board를 실행
-			printf("is_finish()\n");
-			is_end = is_finish(ns); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
+			is_end = is_finish(ns);
+			if(is_end != 0) printf("패배\n");
+		} else if (strcmp(type, "5") == 0) { // 클라이언트측 턴이 끝나고 서버 측 턱
+			is_end = my_turn(ns, 'X');
+			if(is_end != 0) printf("승리\n");
 		}
-	//	my_turn('X');
 	}
-	close(ns);
-	close(sd);
 
+	end_time = time(NULL); // 게임 끝나는 시각
+	play_time = end_time - start_time;	// 총 게임 시간
+	printf("플레이 시간 : %02d:%02d:%02d\n", (play_time) / 3600, (play_time / 60) % 60, play_time % 60);
+
+	close(ns); // 소켓을 닫음
+	close(sd);
+	close(fd); // 파일 디스크립터 닫음
 	return 0;
 }
 
@@ -115,7 +134,6 @@ void init_board() {
 
 // 보드의 현재 상태를 출력해주는 함수
 // 가로, 세로축에 A~F, 1~6 을 추가로 출력해준다.
-
 
 void print_board() {
 	printf(" │ A │ B │ C │ D │ E │ F │\n");
@@ -159,6 +177,9 @@ void send_board(int ns) {
 		perror("send");
 		exit(1);
 	}
+	buf[364] = '\n';
+	buf[365] = '\0';
+	write(fd, buf, 365); // 로그로 쓴다.
 }
 
 // 보드에 돌을 놓는 함수
@@ -170,15 +191,11 @@ void fix_board(int ns) {
 		perror("send");
 		exit(1);
 	}
-	printf("좌표 send\n");
 	
 	if (recv(ns, rowcol, sizeof(rowcol), 0) == -1) {
 		perror("recv");
 		exit(1);
 	}
-
-	printf("좌표 receive  : %c %c %s\n", rowcol[0], rowcol[1], rowcol);
-	sleep(1);
 
 	row = rowcol[1] - '0' - 1;
 	col = rowcol[0] - 'A';
@@ -196,7 +213,6 @@ void fix_board(int ns) {
 			exit(1);
 		}
 	}
-	printf("end..\n");
 }
 
 // 보드의 한 사분면을 회전하는 함수, is_clock_wise 가 y이거나 Y이면 시계방향 회전이다.
@@ -218,7 +234,6 @@ void rotate_board(int ns) {
 		perror("recv");
 		exit(1);
 	}
-	printf("qc : %s\n", qc);
 	if (qc[0] == '1') {
 		row = 0;
 		col = 0;
@@ -252,8 +267,13 @@ void rotate_board(int ns) {
 
 }
 
-int my_turn(char dol) {
-	int check = 0;
+// 클라이언트가 턴을 넘기면, 서버가 게임을 진행하는 함수
+// 순서는 클라이언트 코드랑 같다.
+// 놀 놓기 -> 돌리기 -> 검증 -> 결과 반환
+
+int my_turn(int ns, char dol) {
+	char str[2];
+	int ret = check_pentago();
 	char x, y, quad, c;
 
 	printf("좌표 (ex, A1) : ");
@@ -261,8 +281,9 @@ int my_turn(char dol) {
 		__fpurge(stdin);
 		x = getc(stdin);
 		y = getc(stdin);
-	__fpurge(stdin);
-		if (( (x >= 'A' && x <= 'F') || (x >= 'a' && x <= 'f')) && y >= '1' && y <= '6') break;
+		__fpurge(stdin);
+		if (( (x >= 'A' && x <= 'F') || (x >= 'a' && x <= 'f'))
+				&& y >= '1' && y <= '6') break;
 			printf("잘못 입력하셨습니다. 다시 입력하세요 :");
 	}
 	if (x >= 'a' && x <= 'f') x -= 32; // 'a' - 'A' = 32 소문자를 대문자로
@@ -277,6 +298,10 @@ int my_turn(char dol) {
 			printf("잘못 입력하셨습니다. 다시 입력하세요 :");
 		}
 	}
+
+	system("clear");
+	print_board();
+
 	printf("┌───┬───┐\n");
 	printf("│ 1 │ 2 │\n");
 	printf("├───┼───┤\n");
@@ -288,13 +313,9 @@ int my_turn(char dol) {
 		__fpurge(stdin);
 		quad = getc(stdin);
 		__fpurge(stdin);
-		if (quad - '0' >= 1 && quad - '0' <= 4) break;
+		if (quad >= '1' && quad <= '4') break;
 		printf("잘못 입력하셨습니다. 다시 입력하세요 :");
 	}
-	system("clear");
-	print_board();
-	check = check_pentago();
-	if(check == 1) return 1; // 게임 끝, 승!
 
 	printf("시계방향?(y/n)\n");
 	while (1) {
@@ -304,17 +325,26 @@ int my_turn(char dol) {
 		if (c == 'y' || c == 'Y' || c == 'n' || c == 'N') break;
 			printf("잘못 입력하셨습니다. 다시 입력하세요 :");
 	}
-	if (c == 'y' || 'Y') my_rotate_board(quad -'0' -1, 1);
-	else my_rotate_board(quad - '0' - 1, 3);
+	if (c == 'y' || c == 'Y') my_rotate_board(quad -'0', 1);
+	else my_rotate_board(quad - '0', 3);
 
 	system("clear");
 	print_board();
-	check = check_pentago();
-	if(check == 1) return 1; // 게임 끝, 승!
-	else return 0; // 계속 게임 진행 
+	ret = check_pentago();
+
+	str[0] = ret + '0';
+	str[1] = '\0';
+	if(send(ns, str, strlen(str) + 1, 0) == -1) {
+		perror("send");
+	}
+	if( ret == 1 ) {
+		return 1; // 게임 끝
+	}
+	else return 0; // 게임 계속 진
 }
 
-int my_fix_board(int row, int col, char dol) {
+// col, row 위치에 dol을 놓는다.
+int my_fix_board(int col, int row, char dol) {
 
 	if (arr[row][col] == ' ') {
 		arr[row][col] = dol;
@@ -322,6 +352,7 @@ int my_fix_board(int row, int col, char dol) {
 	} else return -1; 
 }
 
+// quad 사분면에 c 번 90도 회전한다.,
 void my_rotate_board(int quad, int c) {
 	int row, col;
 	if (quad == 1) {
@@ -351,8 +382,7 @@ void my_rotate_board(int quad, int c) {
 	}
 }
 
-//게임이 끝났는지 확인하는 함수
-//5개의 돌이 이어졌는지 체크한다.
+// 게임이 끝나면 1을 반환한다. 
 int is_finish(int ns) {
 	char str[2];
 	int ret = check_pentago();
@@ -361,14 +391,14 @@ int is_finish(int ns) {
 	if(send(ns, str, strlen(str) + 1, 0) == -1) {
 		perror("send");
 	}
-	printf(" ret : %d\n", ret);
 	if( ret == 1 ) {
 		return 1; // 게임 끝
 	}
-	else return 0; // 게임 계속 진
+	else return 0; // 게임 계속 진행
 }
 
 
+//5개의 돌이 이어졌는지 체크한다.
 int check_pentago() {
 	int count = 0;
 	int isNull = 0;

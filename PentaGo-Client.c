@@ -1,22 +1,17 @@
 #include <arpa/inet.h>
-#include <netdb.h>
 #include <sys/un.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
+#include <time.h>
 #include <stdio_ext.h>
+#define PORTNUM 9000
 
-#define PORTNUM 5050
-
-int count;
-
-int is_end;					// 게임이 끝난것을 확인하는 변수,
-										// 0이면 게임이 끝나지 않은 상태,
-										// 1이면 흑돌 win, 2이면, 백돌 win 
-										// c 는 clock wise 의 줄임말로, y or Y 가 입력되면 시계방향 회전
 void get_board(int sd); // 현재 보드의 상태를 출력해주는 함수
 int send_fix_board(int sd, char dol); // 현재 보드의 원하는 위치에 돌을 놓는 함수
 void rotate_board(int sd); // 현재 보드에 원하는 사분면에 원하는 방향으로 회전시키는 함수
@@ -24,11 +19,14 @@ int check_pentago(int sd); // 게임이 끝났는지 확인하는 함수
 int end_turn(int sd);
 
 int main(void) {
-	int sd;
-	char buf[1024];
-	struct sockaddr_in sin, cli;
+	signal(SIGINT, SIG_IGN); // 불계승/패 막기위한 시그널 이그노어
+	int is_end;					// 게임이 끝난것을 확인하는 변수,
+	int sd;	// 소켓파일기술자 위한 변수
+	struct sockaddr_in sin, cli; // 소켓통신 위한 변수
+	time_t start_time, end_time;
+	int play_time;
 	
-	if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+	if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {	// 소켓 생성하기
 		perror("socket");
 		exit(1);
 	}
@@ -36,35 +34,40 @@ int main(void) {
 	memset((char*)&sin, '\0', sizeof(int));
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(PORTNUM);
-	sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+//	sin.sin_addr.s_addr = inet_addr("222.236.11.238");	// 채선이 서버 연결시
+	sin.sin_addr.s_addr = inet_addr("127.0.0.1");	//	로컬 서버 연결시
 
-	if(connect(sd, (struct sockaddr *)&sin, sizeof(sin))) {
+	if(connect(sd, (struct sockaddr *)&sin, sizeof(sin))) { // 서버에 접속 요청
 		perror("connect");
 		exit(1);
 	}
 
-	printf("입장 중\n");
+	start_time = time(NULL); // 게임 시작 시각
 
-	while (is_end == 0) {
-		get_board(sd);
+	while (is_end == 0) {	// 플레이 하는 일련의 과정
+		get_board(sd);	// 보드를 받아온다
 
-		while (send_fix_board(sd, '0') != 0);
-		get_board(sd);
-		rotate_board(sd);
-		system("clear");
-		get_board(sd);
-		is_end = check_pentago(sd);
-		if(is_end != 0) break;
-		is_end = end_turn(sd);
+		while (send_fix_board(sd, '0') != 0);	// 돌 없는곳에 돌 두기
+		get_board(sd);	// 보드를 받아온다
+		rotate_board(sd);	// 보드를 돌린다
+		system("clear");	// 화면 지우기
+		get_board(sd);	// 보드를 받아온다
+		is_end = check_pentago(sd); // 게임 종료 확인한다.
+		if(is_end != 0) break;	// 게임이 끝났다면, 게임을 끝낸다.
+		is_end = end_turn(sd);	// 턴을 넘긴다.
 	}
-	close(sd);
+	end_time = time(NULL); // 게임 끝나는 시각
+	play_time = end_time - start_time; // 총 게임 시간
+	printf("플레이 시간 : %02d:%02d:%02d\n", (play_time) / 3600, (play_time / 60) % 60, play_time % 60);
 
-	system("clear");
-	get_board(sd);
-	if (is_end == 2) printf("패배\n");	
+	if (is_end == 2) printf("패배\n"); // 승리, 패배를 보여준다.
 	else printf("승리\n");
+	close(sd); // 소켓 닫기
 	return 0;
 }
+
+// 보드 상태를 받아오는 함수, buf에 문자열 형태로 받아오고,
+// 적절히 잘라서 출력해준다.
 
 void get_board(int sd) {
 	char buf[365];
@@ -101,14 +104,12 @@ int send_fix_board(int sd, char dol) {
 		perror("send");
 		exit(1);
 	}
-	printf("fnum send\n");
 	
 	if(recv(sd, buf, sizeof(buf), 0) == -1) {
 		perror("recv");
 		exit(1);
 	}
 	fflush(stdout);
-	printf("좌표 receive\n");
 	printf("좌표 (ex, A1) :\n");
 
 	while(1) {
@@ -134,7 +135,6 @@ int send_fix_board(int sd, char dol) {
 		perror("send");
 		exit(1);
 	}
-	printf("좌표 send\n");
 	if(recv(sd, rcv, sizeof(rcv), 0) == -1) {
 		perror("recv");
 		exit(1);
@@ -158,7 +158,6 @@ void rotate_board(int sd) {
 		exit(1);
 	}
 	fflush(stdout);
-	printf("fnum send\n");
 	printf("┌───┬───┐\n");
 	printf("│ 1 │ 2 │\n");
 	printf("├───┼───┤\n");
@@ -187,7 +186,6 @@ void rotate_board(int sd) {
 	str[0] = quadrant;
 	str[1] = c;
 	str[2] = '\0';
-	printf("x,y: %s\n", str);	
 	if(send(sd, str, strlen(str)+1, 0) == -1) {
 		perror("send");
 		exit(1);
@@ -204,21 +202,19 @@ void rotate_board(int sd) {
 
 }
 
+// 게임이 끝났는지 확인하는 함수
 int check_pentago(int sd) {
 	char buf[2];
 	if(send(sd, "4", strlen("4")+1, 0) == -1) {
 		perror("send");
 		exit(1);
 	}
-	printf("fnum send\n");
-
 	
 	if(recv(sd, buf, sizeof(buf), 0) == -1) {
 		perror("recv");
 		exit(1);
 	}
 
-	printf("received : %s\n", buf);
 	if(strcmp(buf, "0") == 0) return 0;
 	else return 1;
 }
@@ -228,16 +224,12 @@ int end_turn(int sd) {
 		perror("send");
 		exit(1);
 	}
-	printf("fnum send\n");
-
 	
 	if(recv(sd, buf, sizeof(buf), 0) == -1) {
 		perror("recv");
 		exit(1);
 	}
-
-	printf("received : %s\n", buf);
+	// 0이 반환되면 게임이 안끝남
 	if(strcmp(buf, "0") == 0) return 0;
 	else return 2;
 }
-	
