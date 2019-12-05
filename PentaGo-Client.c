@@ -34,8 +34,8 @@ int main(void) {
 	memset((char*)&sin, '\0', sizeof(int));
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(PORTNUM);
-//	sin.sin_addr.s_addr = inet_addr("222.236.11.238");	// 채선이 서버 연결시
-	sin.sin_addr.s_addr = inet_addr("127.0.0.1");	//	로컬 서버 연결시
+	sin.sin_addr.s_addr = inet_addr("222.236.11.238");	// 채선이 서버 연결시
+	//sin.sin_addr.s_addr = inet_addr("127.0.0.1");	//	로컬 서버 연결시
 
 	if(connect(sd, (struct sockaddr *)&sin, sizeof(sin))) { // 서버에 접속 요청
 		perror("connect");
@@ -49,7 +49,7 @@ int main(void) {
 
 		while (send_fix_board(sd, '0') != 0);	// 돌 없는곳에 돌 두기
 		get_board(sd);	// 보드를 받아온다
-		if(is_end != 0) break;	// 게임이 끝났다면, 게임을 끝낸다.
+		if(is_end = check_pentago(sd))  break;	// 게임이 끝났다면, 게임을 끝낸다.
 		rotate_board(sd);	// 보드를 돌린다
 		get_board(sd);	// 보드를 받아온다
 		is_end = check_pentago(sd); // 게임 종료 확인한다.
