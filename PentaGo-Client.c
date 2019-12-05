@@ -20,7 +20,7 @@ int end_turn(int sd);
 
 int main(void) {
 	signal(SIGINT, SIG_IGN); // 불계승/패 막기위한 시그널 이그노어
-	int is_end;					// 게임이 끝난것을 확인하는 변수,
+	int is_end = 0;					// 게임이 끝난것을 확인하는 변수,
 	int sd;	// 소켓파일기술자 위한 변수
 	struct sockaddr_in sin, cli; // 소켓통신 위한 변수
 	time_t start_time, end_time;
