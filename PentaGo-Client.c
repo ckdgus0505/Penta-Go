@@ -49,8 +49,8 @@ int main(void) {
 
 		while (send_fix_board(sd, '0') != 0);	// 돌 없는곳에 돌 두기
 		get_board(sd);	// 보드를 받아온다
+		if(is_end != 0) break;	// 게임이 끝났다면, 게임을 끝낸다.
 		rotate_board(sd);	// 보드를 돌린다
-		system("clear");	// 화면 지우기
 		get_board(sd);	// 보드를 받아온다
 		is_end = check_pentago(sd); // 게임 종료 확인한다.
 		if(is_end != 0) break;	// 게임이 끝났다면, 게임을 끝낸다.
