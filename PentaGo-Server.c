@@ -49,6 +49,7 @@ int main(void) {
 	tm = localtime(&start_time);
 	sprintf(file_name, "./Pentagologs/%d%02d%02d_%02d_%02d_%02d.txt", (int)tm->tm_year + 1900,
 		(int)tm->tm_mon+1, (int)tm->tm_mday, (int)tm->tm_hour, (int)tm->tm_min, (int)tm->tm_sec);
+	mkdir("./Pentagologs", 0777);
 	fd = open(file_name, O_CREAT | O_WRONLY | O_APPEND ,0664);
 	if (fd == -1) {
 		perror("Creat");
@@ -301,6 +302,17 @@ int my_turn(int ns, char dol) {
 
 	system("clear");
 	print_board();
+	if (ret = check_pentago()) {
+		str[0] = ret + '0';
+		str[1] = '\0';
+		if(send(ns, str, strlen(str) + 1, 0) == -1) {
+			perror("send");
+		}
+		if( ret == 1 ) {
+			return 1; // 게임 끝
+		}
+		else return 0; // 게임 계속 진행
+	};
 
 	printf("┌───┬───┐\n");
 	printf("│ 1 │ 2 │\n");
@@ -340,7 +352,7 @@ int my_turn(int ns, char dol) {
 	if( ret == 1 ) {
 		return 1; // 게임 끝
 	}
-	else return 0; // 게임 계속 진
+	else return 0; // 게임 계속 진행
 }
 
 // col, row 위치에 dol을 놓는다.
