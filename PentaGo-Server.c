@@ -75,7 +75,7 @@ int main(void) {
 	system("clear");
 	printf("도전자를 기다리는중...\n"); // 소켓 바인드 되기 전까지 대기
 
-	if(listen(sd, 5)) {
+	if(listen(sd, 1)) {
 		perror("listen");
 		exit(1);
 	}
